@@ -110,83 +110,63 @@ the scopes your agent needs:
 
 | Scope | Lets the agent |
 |---|---|
-| `parts:read` | read parts, calculations, costs, process plans, environments and job nests |
-| `parts:write` | create parts, attach uploads to them, quote, cancel, apply a what-if and run job nests |
-| `uploads:write` | upload STEP files and drawings |
+| `parts:read` | read calculations, costs, process plans and costing environments |
+| `parts:write` | price parts (`upload_and_quote`, `quote_part`) and cancel a calculation |
+| `uploads:write` | upload files directly, with the `uploads` toolset |
 
 Your agent is only ever shown the tools its credential can use.
 
 ## Tools
 
-With no extra configuration, the server lists these 31 tools. Each one carries
+With no extra configuration, the server lists these 15 tools. Each one carries
 its `readOnlyHint` and `destructiveHint`, so your client knows which calls only
 read and which ones change something, and can ask you first.
 
-**Get a part in**
+**Price a part**
 
 | Tool | What it does | |
 |---|---|---|
-| `presign_upload` | Answers where and how to send one file. | write |
-| `confirm_upload` | Records that the file arrived and answers the upload's status. | write |
-| `get_upload_link` | A link to the ARCNM upload page, for a client that cannot send files. | read |
-| `create_part` | Creates a part to hold an upload. | write |
-| `attach_upload` | Attaches an upload to a part revision as its CAD, drawing, mesh or RFQ text. | write |
-| `list_parts` | Finds parts, by search text or folder. | read |
-| `list_part_revisions` | A part's revisions, with the id a quote needs. | read |
+| `upload_and_quote` | Prices a new part from its CAD file in one call: a STEP file, or a DXF flat pattern with its sheet thickness and material, plus an optional PDF drawing. Uses quota only if the calculation succeeds. | write |
+| `get_upload_link` | A link to the ARCNM upload page, for a file that is on your computer. | read |
+| `quote_part` | Prices a part already in ARCNM again: another lot size, material or costing environment, or several environments at once. Uses quota only if the calculation succeeds. | write |
 
-**Price it**
+**Follow or stop it**
 
 | Tool | What it does | |
 |---|---|---|
-| `check_quota` | The organization's remaining calculation quota. | read |
-| `quote_part` | Prices a part revision; several costing environments start a batch. Uses quota. | write |
-| `get_calculation` | One calculation: its status and, once priced, its result. | read |
-| `cancel_calculation` | Stops a calculation that has not finished. | write |
-| `list_calculations` | Finds calculations, by part, batch or status. | read |
+| `get_calculation` | One calculation: its status, the time left while it runs and, once priced, its result. | read |
+| `list_calculations` | Finds calculations, by part, batch, status or start time. | read |
+| `cancel_calculation` | Stops a calculation that is queued or running. A cancelled calculation is never charged. | write |
 
-**Understand the cost**
+**Read the result**
 
 | Tool | What it does | |
 |---|---|---|
 | `explain_cost` | Headline cost and times, the prediction band, the breakdown and the top cost drivers. | read |
-| `get_cost_drivers` | The top cost drivers, ranked, each with its cost, share and reason. | read |
 | `get_cost_breakdown` | The itemised cost sheet, at any lot size. | read |
 | `get_process_plan` | The routing, with work centres and cycle times. | read |
-| `suggest_cost_savings` | Every cost-reduction direction, each with its lever and confidence. | read |
-| `optimize_lot_size` | The lot size with the lowest total cost, and the cost-versus-quantity curve. | read |
 
-**Ask what-if**
+**Improve and compare**
 
 | Tool | What it does | |
 |---|---|---|
-| `get_cost_factors` | Every factor a costing environment lets you change, with its value and source. | read |
 | `preview_cost` | Re-prices a calculation with factors moved or at another lot size. Uses no quota and writes nothing. | read |
-| `apply_adjustment` | Plans, and with `apply=true` makes, the changes that make a what-if stick. | write |
-
-**Compare**
-
-| Tool | What it does | |
-|---|---|---|
+| `optimize_lot_size` | The lot size with the lowest total cost, and the cost-versus-quantity curve. | read |
+| `suggest_cost_savings` | Every cost-reduction direction, each with its lever and confidence. | read |
 | `compare_calculations` | Two calculations: the price difference. Three to twenty: a ranking. | read |
-| `compare_environments` | Parts against costing environments, as one matrix. | read |
-| `list_environments` | The organization's costing environments. | read |
-| `get_environment` | One costing environment, with its rates and overheads. | read |
 
-**Nest sheet metal**
+**Lookups**
 
 | Tool | What it does | |
 |---|---|---|
-| `create_nest_run` | Plans, and with `apply=true` starts, a job nest of sheet-metal parts. | write |
-| `start_nest_run` | Starts a job nest kept as a draft. | write |
-| `cancel_nest_run` | Stops a job nest that has not ended. | write |
-| `get_nest_run` | A job nest's progress, and its result once it has ended. | read |
-| `get_nesting_summary` | Nesting runs used and left, and what nesting has saved. | read |
-| `export_nest_layout` | The cutting files, as JSON, DXF or SVG. | read |
+| `list_environments` | The organization's costing environments. | read |
+| `check_quota` | The organization's remaining calculation quota. | read |
 
-None of these 31 deletes anything. More tools (uploads, calculations, parts,
-environments, the materials and tooling catalog, calibration, folders) are
-listed when a client asks for them; see
-[toolsets](https://arcnm.io/docs/mcp#toolsets).
+None of these 15 deletes anything. More tools — direct uploads, parts, ranked
+cost drivers, costing environments and what-if adjustments, job nests for
+sheet metal, the materials and tooling catalog, calibration, folders — are
+listed when your client sends the `X-MCP-Toolsets` header with the toolsets it
+wants, or `all`; see [toolsets](https://arcnm.io/docs/mcp#toolsets).
 
 ## Prompts
 
@@ -200,7 +180,6 @@ and `find_cost_drivers`.
 - *"Which three things drive the cost of this part, and what would change them?"*
 - *"Compare this bracket across our costing environments and tell me where to make it."*
 - *"What lot size gives the lowest total cost?"*
-- *"Nest this week's sheet-metal orders and tell me what it saves."*
 
 ## Support
 
