@@ -118,7 +118,7 @@ Your agent is only ever shown the tools its credential can use.
 
 ## Tools
 
-With no extra configuration, the server lists these 15 tools. Each one carries
+With no extra configuration, the server lists these 16 tools. Each one carries
 its `readOnlyHint` and `destructiveHint`, so your client knows which calls only
 read and which ones change something, and can ask you first.
 
@@ -128,6 +128,7 @@ read and which ones change something, and can ask you first.
 |---|---|---|
 | `upload_and_quote` | Prices a new part from its CAD file in one call: a STEP file, or a DXF flat pattern with its sheet thickness and material, plus an optional PDF drawing. Uses quota only if the calculation succeeds. | write |
 | `get_upload_link` | A link to the ARCNM upload page, for a file that is on your computer. | read |
+| `attach_drawing` | Stores a PDF, PNG or JPEG drawing on a part revision that already has a calculation. Free. The next price is `quote_part` with `derived_from_calculation_id`. | write |
 | `quote_part` | Prices a part already in ARCNM again: another lot size, material or costing environment, or several environments at once. Uses quota only if the calculation succeeds. | write |
 
 **Follow or stop it**
@@ -162,7 +163,7 @@ read and which ones change something, and can ask you first.
 | `list_environments` | The organization's costing environments. | read |
 | `check_quota` | The organization's remaining calculation quota. | read |
 
-None of these 15 deletes anything. More tools — direct uploads, parts, ranked
+None of these 16 deletes anything. More tools — direct uploads, parts, ranked
 cost drivers, costing environments and what-if adjustments, job nests for
 sheet metal, the materials and tooling catalog, calibration, folders — are
 listed when your client sends the `X-MCP-Toolsets` header with the toolsets it
