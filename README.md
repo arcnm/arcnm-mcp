@@ -15,12 +15,61 @@ install or run.
 | **Registry** | `io.arcnm/arcnm` in the [MCP Registry](https://registry.modelcontextprotocol.io) |
 | **Sign-in** | OAuth with your ARCNM account, or an ARCNM API key as a bearer token |
 | **Docs** | [arcnm.io/docs/mcp](https://arcnm.io/docs/mcp) |
+| **No account** | Pay per call at `https://api.arcnm.io/mcp-server/pay/mcp`: [see below](#pay-per-call-no-account) |
 
 ## What you need
 
 An [ARCNM](https://arcnm.io) account. The Free plan includes 10 calculations a
 month, no card required. Reading results costs nothing; starting a calculation
-uses your quota, and `check_quota` tells your agent how much is left.
+uses your quota, and `check_quota` tells your agent how much is left. No
+account? Your agent can [pay per call](#pay-per-call-no-account) instead.
+
+## Pay per call, no account
+
+ARCNM runs a second MCP server for agents without an ARCNM account. There is no
+sign-in: the agent pays for each calculation inside the tool call.
+
+| | |
+|---|---|
+| **Endpoint** | `https://api.arcnm.io/mcp-server/pay/mcp` (Streamable HTTP, no key) |
+| **Registry** | `io.arcnm/arcnm-pay` in the [MCP Registry](https://registry.modelcontextprotocol.io) |
+| **Price** | EUR 0.89 per calculation, VAT included. One made part in one costing environment is one calculation |
+| **Guide** | [arcnm.io/docs/pay-per-call](https://arcnm.io/docs/pay-per-call) |
+
+Bought and catalogue parts are free. A price check is free and returns a
+binding offer that stands for 24 hours. A calculation that fails is never
+charged.
+
+| Tool | What it does | Cost |
+|---|---|---|
+| `price_parts` | Prices one CAD file or several. Unpaid, it answers with the offer as a payment requirement; paid, with the result and a `result_token`. With no file, it lists the environments, parameters, limits and unit price. | EUR 0.89 per made part per environment, when paid |
+| `get_result` | A paid purchase: its status while it runs, then the summary and the receipt. | free |
+| `preview_cost` | The itemised cost sheet of a paid part or component at another lot size. | free |
+
+**Paying.** The MCP server takes x402: USDC on Base. Your client signs the
+offer and calls `price_parts` again with the payment in `_meta["x402/payment"]`.
+If your client can't attach a payment, pay the offer's `pay_url` over HTTP and
+read the result with `get_result`. A card pays over HTTP only, at
+`POST https://api.arcnm.io/api/v1/pay/price`, from 6 calculations per payment.
+
+Add it next to the account server, or on its own, for example in
+`.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "arcnm-pay": {
+      "type": "http",
+      "url": "https://api.arcnm.io/mcp-server/pay/mcp"
+    }
+  }
+}
+```
+
+**Which one?** Use the account server when you price parts every day: it runs
+on your plan's quota, in your own costing environments, calibrated to your
+shop. Pay per call when there is no account: your agent prices in the
+environments `price_parts` lists, and pays per calculation.
 
 ## Connect
 
